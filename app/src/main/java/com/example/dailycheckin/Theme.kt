@@ -45,26 +45,6 @@ object Theme {
         current = palette
     }
 
-    /**
-     * 桌面图标跟随配色：7 个 activity-alias 启动别名各挂一张图标，
-     * 只启用当前配色对应的别名（DONT_KILL_APP 不杀进程）
-     * 注：部分桌面会缓存图标，可能稍等片刻才刷新
-     */
-    fun applyIcon(context: Context) {
-        val pm = context.packageManager
-        for (p in PALETTES) {
-            val alias = "com.example.dailycheckin.Launcher" +
-                p.key.replaceFirstChar { it.uppercase() }
-            val cn = android.content.ComponentName(context, alias)
-            pm.setComponentEnabledSetting(
-                cn,
-                if (p == current) android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-                else android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                android.content.pm.PackageManager.DONT_KILL_APP
-            )
-        }
-    }
-
     val primary get() = current.primary
     val dark get() = current.dark
     fun current() = current

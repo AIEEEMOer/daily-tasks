@@ -30,6 +30,19 @@ def qbez(p0, p1, p2, n=48):
         pts.append((x, y))
     return pts
 
+def hand(d, cx, cy, tx, ty, base_w, fill):
+    """锥形指针：轴心端宽 base_w，远端收成尖点（像真实时钟指针）"""
+    import math
+    dx, dy = tx - cx, ty - cy
+    length = math.hypot(dx, dy)
+    px, py = -dy / length, dx / length   # 单位垂直向量
+    hw = base_w / 2.0
+    d.polygon([
+        (cx + px * hw, cy + py * hw),
+        (cx - px * hw, cy - py * hw),
+        (tx, ty),
+    ], fill=fill)
+
 def make_icon(key, start, end):
     img = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
     # 对角渐变（左上 -> 右下）
@@ -53,21 +66,20 @@ def make_icon(key, start, end):
     tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
     d.text(((SIZE - tw) / 2 - bbox[0], 38 - bbox[1]), text, font=font, fill=(255, 255, 255, 255))
     # 时钟指针对勾：时针短而粗（左下），分针长而细（右上），中间轴心圆点
+    # 指针为锥形：轴心端粗、远端收尖
     white = (255, 255, 255, 255)
     cx, cy = 86, 138                      # 轴心（对号谷底位置）
-    hx, hy = 58, 118                      # 时针端点（短）
-    mx, my = 134, 88                      # 分针端点（长）
-    d.line([(cx, cy), (hx, hy)], fill=white, width=15)   # 时针：短粗
-    d.line([(cx, cy), (mx, my)], fill=white, width=7)    # 分针：长细
-    # 端点圆头
-    d.ellipse([hx - 7, hy - 7, hx + 7, hy + 7], fill=white)
-    d.ellipse([mx - 3, my - 3, mx + 3, my + 3], fill=white)
+    hx, hy = 54, 114                      # 时针尖端（短）
+    mx, my = 138, 84                      # 分针尖端（长）
+    hand(d, cx, cy, hx, hy, 17, white)    # 时针：短粗，远端尖
+    hand(d, cx, cy, mx, my, 9, white)     # 分针：长细，远端尖
     # 轴心圆点
     d.ellipse([cx - 9, cy - 9, cx + 9, cy + 9], fill=white)
 
     img.save(os.path.join(OUT, f"icon_{key}.png"))
     print("saved", key)
 
-for k, (s, e) in PALETTES.items():
-    make_icon(k, s, e)
+# 固定使用绿色图标（已移除图标随配色变色功能）
+s, e = PALETTES["green"]
+make_icon("green", s, e)
 print("done")

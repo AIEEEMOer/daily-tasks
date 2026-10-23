@@ -28,102 +28,15 @@
             android:name=".SettingsActivity"
             android:exported="false" />
 
-        <!-- 主 Activity 不直接出现在桌面，通过下面的别名入口启动（图标随配色切换） -->
+        <!-- 主 Activity：桌面启动入口（固定绿色图标，不再随配色切换） -->
         <activity
             android:name=".MainActivity"
-            android:exported="true" />
-
-        <!-- 7 个启动别名：每个挂一张配色图标，任何时候只启用当前配色对应的那个 -->
-        <activity-alias
-            android:name=".LauncherGreen"
-            android:enabled="true"
-            android:exported="true"
-            android:icon="@drawable/icon_green"
-            android:label="@string/app_name"
-            android:targetActivity=".MainActivity">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".LauncherBlue"
-            android:enabled="false"
-            android:exported="true"
-            android:icon="@drawable/icon_blue"
-            android:label="@string/app_name"
-            android:targetActivity=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".LauncherOrange"
-            android:enabled="false"
-            android:exported="true"
-            android:icon="@drawable/icon_orange"
-            android:label="@string/app_name"
-            android:targetActivity=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".LauncherPurple"
-            android:enabled="false"
-            android:exported="true"
-            android:icon="@drawable/icon_purple"
-            android:label="@string/app_name"
-            android:targetActivity=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".LauncherPink"
-            android:enabled="false"
-            android:exported="true"
-            android:icon="@drawable/icon_pink"
-            android:label="@string/app_name"
-            android:targetActivity=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".LauncherTeal"
-            android:enabled="false"
-            android:exported="true"
-            android:icon="@drawable/icon_teal"
-            android:label="@string/app_name"
-            android:targetActivity=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".LauncherRed"
-            android:enabled="false"
-            android:exported="true"
-            android:icon="@drawable/icon_red"
-            android:label="@string/app_name"
-            android:targetActivity=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
+        </activity>
 
         <!-- 每晚 20:00 提醒触发器 -->
         <receiver

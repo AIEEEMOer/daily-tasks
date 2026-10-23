@@ -62,8 +62,6 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         Lang.init(this)
         Theme.init(this)
-        // 注意：图标切换（Theme.applyIcon）只能在 onDestroy(isFinishing) 时做。
-        // 冷启动时若禁用"本次启动所用入口"，vivo 等 ROM 会直接杀掉任务导致打不开 App
         themeOnCreate = Theme.current()
         setContentView(R.layout.activity_main)
         findViewById<TextView>(R.id.tvAppTitle).text = Lang.appName
@@ -202,9 +200,6 @@ class MainActivity : Activity() {
 
     override fun onDestroy() {
         quoteHandler.removeCallbacks(quoteRunnable)
-        // 只在真正退出 App 时切换桌面图标（isFinishing 为 true）；
-        // recreate() 重建页面也会走 onDestroy，此时禁用启动别名会被系统杀掉任务，必须跳过
-        if (isFinishing) Theme.applyIcon(this)
         super.onDestroy()
     }
 
