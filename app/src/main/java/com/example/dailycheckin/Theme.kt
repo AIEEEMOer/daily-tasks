@@ -17,7 +17,7 @@ object Theme {
     data class Palette(val key: String, val zh: String, val en: String, val primary: Int, val dark: Int)
 
     val PALETTES = listOf(
-        Palette("green",  "清新绿（默认）", "Fresh Green (Default)", 0xFF2EBD85.toInt(), 0xFF1FA371.toInt()),
+        Palette("green",  "清新绿", "Fresh Green", 0xFF2EBD85.toInt(), 0xFF1FA371.toInt()),
         Palette("blue",   "晴空蓝", "Sky Blue",   0xFF55A8F5.toInt(), 0xFF2E86DE.toInt()),
         Palette("orange", "活力橙", "Orange",     0xFFFF9F5A.toInt(), 0xFFF27E2E.toInt()),
         Palette("purple", "梦幻紫", "Purple",     0xFFA88BEB.toInt(), 0xFF8B5CF6.toInt()),
