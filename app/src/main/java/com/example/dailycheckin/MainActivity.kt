@@ -62,7 +62,8 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         Lang.init(this)
         Theme.init(this)
-        Theme.applyIcon(this) // 冷启动时同步图标（用户无感知）
+        // 注意：图标切换（Theme.applyIcon）只能在 onDestroy(isFinishing) 时做。
+        // 冷启动时若禁用"本次启动所用入口"，vivo 等 ROM 会直接杀掉任务导致打不开 App
         themeOnCreate = Theme.current()
         setContentView(R.layout.activity_main)
         findViewById<TextView>(R.id.tvAppTitle).text = Lang.appName
