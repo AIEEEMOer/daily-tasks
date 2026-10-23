@@ -60,6 +60,7 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         Lang.init(this)
         Theme.init(this)
+        Theme.applyIcon(this) // 同步桌面图标与当前配色
         setContentView(R.layout.activity_main)
         findViewById<TextView>(R.id.tvAppTitle).text = Lang.appName
 
