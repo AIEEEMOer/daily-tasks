@@ -5,8 +5,9 @@
     android:background="@color/bg_page"
     android:orientation="vertical">
 
-    <!-- 顶部栏：返回 + 标题 -->
+    <!-- 顶部栏：返回 + 标题（背景按配色在代码中设置） -->
     <LinearLayout
+        android:id="@+id/headerBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_header"

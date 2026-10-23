@@ -5,8 +5,9 @@
     android:background="@color/bg_page"
     android:orientation="vertical">
 
-    <!-- 顶部头部：渐变绿 + 漂浮装饰圆 -->
+    <!-- 顶部头部：主题色渐变（代码中按配色设置）+ 漂浮装饰圆 -->
     <FrameLayout
+        android:id="@+id/headerBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_header">

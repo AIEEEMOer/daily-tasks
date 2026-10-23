@@ -70,6 +70,9 @@ class HeatmapView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+        // 每次绘制同步当前配色（打卡块 = 主色，今天描边 = 深色）
+        checkedPaint.color = Theme.primary
+        todayRingPaint.color = Theme.dark
         val cell = width / 7f
         val gap = cell * 0.09f
         val size = cell - gap * 2

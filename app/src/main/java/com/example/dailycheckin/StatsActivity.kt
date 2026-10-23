@@ -22,7 +22,15 @@ class StatsActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Lang.init(this)
+        Theme.init(this)
         setContentView(R.layout.activity_stats)
+
+        // 应用配色主题：状态栏 + 头部渐变 + 总览大数字
+        window.statusBarColor = Theme.dark
+        findViewById<View>(R.id.headerBox).background = Theme.headerBg(this)
+        findViewById<TextView>(R.id.tvSumTotal).setTextColor(Theme.primary)
+        findViewById<TextView>(R.id.tvSumDays).setTextColor(Theme.primary)
+        findViewById<TextView>(R.id.tvSumToday).setTextColor(Theme.primary)
 
         // 双语文案
         findViewById<TextView>(R.id.tvStatsTitle).text = Lang.s("打卡统计", "Statistics")

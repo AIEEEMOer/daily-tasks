@@ -74,6 +74,10 @@ class HabitAdapter(
 
         tvName.text = habit.name
         tvType.text = "${habit.basket.emoji} ${habit.type.label()}"
+        // 应用配色主题：标签、连续天数、打卡圆圈
+        tvType.setTextColor(Theme.primary)
+        tvType.background = Theme.tagBg(context)
+        tvStreak.setTextColor(Theme.primary)
 
         if (habit.isNotStarted()) {
             // 提前设置的未来目标：显示开始日期，打卡按钮置灰
@@ -96,9 +100,8 @@ class HabitAdapter(
             tvTotal.text = Lang.s("共 ${habit.totalCount()} 次", "${habit.totalCount()} check-ins")
 
             val checked = habit.isCheckedToday()
-            btnCheck.setBackgroundResource(
-                if (checked) R.drawable.bg_circle_checked else R.drawable.bg_circle_unchecked
-            )
+            btnCheck.background =
+                if (checked) Theme.fabBg(context) else Theme.circleUnchecked(context)
             btnCheck.text = if (checked) "✓" else ""
             btnCheck.setOnClickListener { v ->
                 // 打卡弹跳动画：放大回弹后再触发状态切换
@@ -148,9 +151,8 @@ class HabitAdapter(
             val lp = LinearLayout.LayoutParams(size, size)
             lp.setMargins(margin, 0, margin, 0)
             dot.layoutParams = lp
-            dot.setBackgroundResource(
-                if (done) R.drawable.bg_dot_checked else R.drawable.bg_dot_unchecked
-            )
+            if (done) dot.background = Theme.dotChecked()
+            else dot.setBackgroundResource(R.drawable.bg_dot_unchecked) // 未打卡浅灰，与主题无关
             container.addView(dot)
         }
     }

@@ -59,8 +59,13 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Lang.init(this)
+        Theme.init(this)
         setContentView(R.layout.activity_main)
         findViewById<TextView>(R.id.tvAppTitle).text = Lang.appName
+
+        // —— 应用配色主题：状态栏 + 头部渐变 + 三个底部圆按钮 ——
+        window.statusBarColor = Theme.dark
+        findViewById<View>(R.id.headerBox).background = Theme.headerBg(this)
 
         tvDate = findViewById(R.id.tvDate)
         tvProgress = findViewById(R.id.tvProgress)
@@ -71,6 +76,10 @@ class MainActivity : Activity() {
         val listView: ListView = findViewById(R.id.listView)
         val fabAdd: TextView = findViewById(R.id.fabAdd)
         val tvStats: TextView = findViewById(R.id.tvStats)
+        // 底部三按钮统一使用主题色圆形背景
+        fabAdd.background = Theme.fabBg(this)
+        tvStats.background = Theme.fabBg(this)
+        findViewById<View>(R.id.tvSettings).background = Theme.fabBg(this)
 
         // 头部装饰圆漂浮动画 + 按钮按压动效
         startFloatAnim(findViewById(R.id.deco1), 22f, 2800)
@@ -241,6 +250,14 @@ class MainActivity : Activity() {
         val targetRow: View = view.findViewById(R.id.targetRow)
         val tvStartDate: TextView = view.findViewById(R.id.tvStartDate)
 
+        // 应用配色主题：标题竖条 + 输入框聚焦描边
+        view.findViewById<View>(R.id.tvTitleBar).background = Theme.titleBarBg(this)
+        etName.background = Theme.inputBg(this)
+        spType.background = Theme.inputBg(this)
+        spBasket.background = Theme.inputBg(this)
+        etTarget.background = Theme.inputBg(this)
+        tvStartDate.background = Theme.inputBg(this)
+
         // 双语文案与下拉选项（对话框标题已内嵌在布局中）
         view.findViewById<TextView>(R.id.tvDlgTitle).text = Lang.s("✨ 新建任务目标", "✨ New Goal")
         view.findViewById<TextView>(R.id.tvDlgSubtitle).text =
@@ -308,7 +325,14 @@ class MainActivity : Activity() {
                 refresh()
             }
             .setNegativeButton(Lang.cancel, null)
-            .show()
+            .show().also { tintButtons(it) }
+    }
+
+    /** 对话框按钮文字着主题色（默认 colorAccent 不会随配色切换） */
+    private fun tintButtons(dlg: AlertDialog) {
+        dlg.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(Theme.dark)
+        dlg.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(Theme.dark)
+        dlg.getButton(AlertDialog.BUTTON_NEUTRAL)?.setTextColor(Theme.dark)
     }
 
     /** Spinner 下拉适配器（选项随语言切换） */
@@ -379,7 +403,7 @@ class MainActivity : Activity() {
         fun navBtn(t: String) = TextView(this).apply {
             text = t
             textSize = 20f
-            setTextColor(android.graphics.Color.parseColor("#1FA371"))
+            setTextColor(Theme.dark)
             val p = (14 * dp).toInt()
             setPadding(p, 0, p, 0)
         }
@@ -426,7 +450,7 @@ class MainActivity : Activity() {
             .setTitle(habit.name)
             .setView(scroll)
             .setPositiveButton(Lang.ok, null)
-            .show()
+            .show().also { tintButtons(it) }
     }
 
     /** 打卡成功后记录心得（可跳过；再次打卡可修改） */
@@ -451,7 +475,7 @@ class MainActivity : Activity() {
                 Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton(Lang.s("跳过", "Skip"), null)
-            .show()
+            .show().also { tintButtons(it) }
     }
 
     /** 删除确认 */
@@ -465,6 +489,6 @@ class MainActivity : Activity() {
                 refresh()
             }
             .setNegativeButton(Lang.cancel, null)
-            .show()
+            .show().also { tintButtons(it) }
     }
 }

@@ -20,6 +20,8 @@ class SettingsActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Lang.init(this)
+        Theme.init(this)
+        window.statusBarColor = Theme.dark
         val dp = resources.displayMetrics.density
         fun Int.dp() = (this * dp).toInt()
 
@@ -38,7 +40,7 @@ class SettingsActivity : Activity() {
         val btnBack = TextView(this).apply {
             text = "‹"
             textSize = 32f
-            setTextColor(Color.parseColor("#1FA371"))
+            setTextColor(Theme.dark)
             setPadding(12.dp(), 0, 12.dp(), 0)
             setOnClickListener { finish() }
         }
@@ -74,10 +76,10 @@ class SettingsActivity : Activity() {
         ) { showLanguageDialog() })
 
         content.addView(settingItem(
-            Lang.s("🔄 检查更新", "🔄 Check for Updates"),
-            Lang.s("当前版本 v${UpdateManager.currentVersion(this)}", "Current: v${UpdateManager.currentVersion(this)}"),
+            Lang.s("🎨 配色选择", "🎨 Color Theme"),
+            Lang.s("当前：${Theme.current().zh}", "Current: ${Theme.current().en}"),
             marginTop = true
-        ) { UpdateManager.checkAsync(this, manual = true) })
+        ) { showThemeDialog() })
 
         content.addView(settingItem(
             Lang.s("❤️ 名言收藏", "❤️ Favorite Quotes"),
@@ -85,6 +87,13 @@ class SettingsActivity : Activity() {
                 "${FavQuotes.list(this).size} saved · long-press a quote on home page"),
             marginTop = true
         ) { showFavDialog() })
+
+        // 检查更新固定为最后一项
+        content.addView(settingItem(
+            Lang.s("🔄 检查更新", "🔄 Check for Updates"),
+            Lang.s("当前版本 v${UpdateManager.currentVersion(this)}", "Current: v${UpdateManager.currentVersion(this)}"),
+            marginTop = true
+        ) { UpdateManager.checkAsync(this, manual = true) })
 
         root.addView(ScrollView(this).apply { addView(content) })
         setContentView(root)
@@ -144,6 +153,28 @@ class SettingsActivity : Activity() {
                 if (toEnglish != Lang.english) {
                     Lang.setEnglish(this, toEnglish)
                     // 重启 App 回到主页，全部文案按新语言渲染
+                    val intent = Intent(this, MainActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                    startActivity(intent)
+                    finish()
+                }
+                dlg.dismiss()
+            }
+            .setNegativeButton(Lang.cancel, null)
+            .show()
+    }
+
+    /** 配色选择：7 套主题色单选，切换后重启 App 生效 */
+    private fun showThemeDialog() {
+        val names = Theme.PALETTES.map { if (Lang.english) it.en else it.zh }.toTypedArray()
+        val checked = Theme.PALETTES.indexOf(Theme.current())
+        AlertDialog.Builder(this)
+            .setTitle(Lang.s("配色选择", "Color Theme"))
+            .setSingleChoiceItems(names, checked) { dlg, which ->
+                val p = Theme.PALETTES[which]
+                if (p != Theme.current()) {
+                    Theme.set(this, p)
+                    // 重启 App 回到主页，全部界面按新配色渲染
                     val intent = Intent(this, MainActivity::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                     startActivity(intent)
