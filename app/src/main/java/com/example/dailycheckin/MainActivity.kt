@@ -264,7 +264,8 @@ class MainActivity : Activity() {
         view.findViewById<TextView>(R.id.tvDlgTitle).text = Lang.s("✨ 新建任务目标", "✨ New Goal")
         view.findViewById<TextView>(R.id.tvDlgSubtitle).text =
             Lang.s("设定一个小目标，坚持就会开花", "Set a small goal — consistency makes it bloom")
-        etName.hint = Lang.s("✏️ 目标名称，如：早起、背单词", "✏️ Goal name, e.g. Running, Reading")
+        view.findViewById<TextView>(R.id.tvLblName).text = Lang.s("✏️ 目标名称", "✏️ Goal name")
+        etName.hint = Lang.s("如：早起、背单词", "e.g. Running, Reading")
         view.findViewById<TextView>(R.id.tvLblType).text = Lang.s("🎯 目标类型", "🎯 Goal type")
         view.findViewById<TextView>(R.id.tvLblBasket).text = Lang.s("🧺 任务篮子", "🧺 Basket")
         view.findViewById<TextView>(R.id.tvLblTarget).text = Lang.s("🔢 目标次数", "🔢 Times")

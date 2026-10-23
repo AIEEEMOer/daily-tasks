@@ -40,12 +40,21 @@
         android:textColor="@color/text_hint"
         android:textSize="12sp" />
 
-    <!-- 名称输入 -->
+    <!-- 目标名称：标签 + 输入框（与其他字段同款结构） -->
+    <TextView
+        android:id="@+id/tvLblName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textColor="#5A6B62"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
     <EditText
         android:id="@+id/etName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="6dp"
         android:background="@drawable/bg_input"
         android:paddingStart="14dp"
         android:paddingTop="12dp"
