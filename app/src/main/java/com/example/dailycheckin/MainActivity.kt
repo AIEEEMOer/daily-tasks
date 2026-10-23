@@ -44,6 +44,8 @@ class MainActivity : Activity() {
     private var quoteIndex = 0
     private var quoteOrder = mutableListOf<Int>()
     private var quotePos = 0
+    /** 进入主页时的配色，用于从设置页返回时检测配色变化 */
+    private var themeOnCreate: Theme.Palette? = null
     private val quoteRunnable = object : Runnable {
         override fun run() {
             nextQuote(animate = true)
@@ -60,7 +62,8 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         Lang.init(this)
         Theme.init(this)
-        Theme.applyIcon(this) // 同步桌面图标与当前配色
+        Theme.applyIcon(this) // 冷启动时同步图标（用户无感知）
+        themeOnCreate = Theme.current()
         setContentView(R.layout.activity_main)
         findViewById<TextView>(R.id.tvAppTitle).text = Lang.appName
 
@@ -146,6 +149,12 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        // 从设置页返回时若配色已变，就地重建主页（无需重启整个 App）
+        if (themeOnCreate != null && themeOnCreate != Theme.current()) {
+            themeOnCreate = Theme.current()
+            recreate()
+            return
+        }
         // 更新安装完成回到 App 时，自动删除残留安装包
         UpdateManager.cleanupIfUpdated(this)
         if (::habits.isInitialized) refresh()
@@ -192,6 +201,8 @@ class MainActivity : Activity() {
 
     override fun onDestroy() {
         quoteHandler.removeCallbacks(quoteRunnable)
+        // 退出 App 时再切换桌面图标，避免切换配色时图标立即跳变
+        Theme.applyIcon(this)
         super.onDestroy()
     }
 

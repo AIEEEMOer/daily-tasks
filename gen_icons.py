@@ -20,6 +20,16 @@ PALETTES = {
 def lerp(c1, c2, t):
     return tuple(int(c1[i] + (c2[i] - c1[i]) * t) for i in range(3))
 
+def qbez(p0, p1, p2, n=48):
+    """二次贝塞尔曲线采样点"""
+    pts = []
+    for i in range(n + 1):
+        t = i / n
+        x = (1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t ** 2 * p2[0]
+        y = (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t ** 2 * p2[1]
+        pts.append((x, y))
+    return pts
+
 def make_icon(key, start, end):
     img = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
     # 对角渐变（左上 -> 右下）
@@ -42,12 +52,13 @@ def make_icon(key, start, end):
     bbox = d.textbbox((0, 0), text, font=font)
     tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
     d.text(((SIZE - tw) / 2 - bbox[0], 38 - bbox[1]), text, font=font, fill=(255, 255, 255, 255))
-    # 白色对勾
-    d.line([(62, 124), (86, 148)], fill=(255, 255, 255, 255), width=14, joint="curve")
-    d.line([(86, 148), (132, 96)], fill=(255, 255, 255, 255), width=14, joint="curve")
-    # 端点圆头
-    for cx, cy in [(62, 124), (132, 96)]:
-        d.ellipse([cx - 7, cy - 7, cx + 7, cy + 7], fill=(255, 255, 255, 255))
+    # 弧形对勾（swoosh 风格）：贝塞尔曲线围成的流畅弯钩，尖尾 + 上扬尖梢
+    white = (255, 255, 255, 255)
+    top = qbez((138, 90), (106, 140), (85, 150))    # 上缘：右尖梢 → 谷底
+    bot = qbez((85, 150), (72, 136), (52, 114))     # 下缘：谷底 → 左尖尾
+    d.polygon(top + bot[::-1], fill=white)
+    # 谷底过渡圆润一点
+    d.ellipse([78, 138, 96, 156], fill=white)
 
     img.save(os.path.join(OUT, f"icon_{key}.png"))
     print("saved", key)

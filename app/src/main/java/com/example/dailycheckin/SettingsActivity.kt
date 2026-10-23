@@ -171,7 +171,7 @@ class SettingsActivity : Activity() {
             .show()
     }
 
-    /** 配色选择：7 套主题色单选，切换后重启 App 生效 */
+    /** 配色选择：7 套主题色单选，就地刷新生效（不重启 App）；图标退出后才切换 */
     private fun showThemeDialog() {
         val names = Theme.PALETTES.map { if (Lang.english) it.en else it.zh }.toTypedArray()
         val checked = Theme.PALETTES.indexOf(Theme.current())
@@ -180,12 +180,8 @@ class SettingsActivity : Activity() {
             .setSingleChoiceItems(names, checked) { dlg, which ->
                 val p = Theme.PALETTES[which]
                 if (p != Theme.current()) {
-                    Theme.set(this, p)
-                    // 重启 App 回到主页，全部界面按新配色渲染
-                    val intent = Intent(this, MainActivity::class.java)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                    startActivity(intent)
-                    finish()
+                    Theme.set(this, p) // 只存偏好；图标在退出 App 后由 MainActivity 切换
+                    recreate() // 设置页就地刷新为新配色
                 }
                 dlg.dismiss()
             }
