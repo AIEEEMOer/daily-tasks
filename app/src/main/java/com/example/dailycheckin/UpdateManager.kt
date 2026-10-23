@@ -145,7 +145,12 @@ object UpdateManager {
         val fileName = "daily-tasks-update.apk"
         val dir = activity.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
         val old = File(dir, fileName)
-        if (old.exists()) old.delete()
+        // 已下载过的更新包直接安装，不重复下载
+        if (old.exists() && old.length() > 0) {
+            Toast.makeText(activity, Lang.s("更新包已下载，直接安装", "Update already downloaded, installing"), Toast.LENGTH_SHORT).show()
+            installApk(activity, old)
+            return
+        }
 
         val req = DownloadManager.Request(Uri.parse(url))
             .setTitle(Lang.s("每日任务 更新包", "Daily Tasks update"))
@@ -158,6 +163,8 @@ object UpdateManager {
         Toast.makeText(activity, Lang.s("开始下载更新包…", "Download started…"), Toast.LENGTH_SHORT).show()
 
         // 监听下载完成 → 调起安装
+        // 注意：该广播由系统下载管理器（另一个应用）发出，必须用 RECEIVER_EXPORTED，
+        // 否则 Android 13+ 收不到回调，下载完成后不会自动调起安装
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 if (intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) == downloadId) {
@@ -165,13 +172,14 @@ object UpdateManager {
                         activity.unregisterReceiver(this)
                     } catch (_: Exception) {
                     }
+                    Toast.makeText(activity, Lang.s("下载完成，正在调起安装…", "Download complete, launching installer…"), Toast.LENGTH_SHORT).show()
                     installApk(activity, File(activity.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fileName))
                 }
             }
         }
         val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
         if (Build.VERSION.SDK_INT >= 33) {
-            activity.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            activity.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
         } else {
             @Suppress("UnspecifiedRegisterReceiverFlag")
             activity.registerReceiver(receiver, filter)
@@ -214,7 +222,12 @@ object UpdateManager {
             session.commit(pi.intentSender)
             session.close()
         } catch (e: Exception) {
-            Toast.makeText(activity, Lang.s("安装失败：${e.message}", "Install failed: ${e.message}"), Toast.LENGTH_LONG).show()
+            Toast.makeText(activity, Lang.s("安装调起失败，已打开系统下载页，可手动点击安装包", "Installer failed; opening Downloads, tap the APK manually"), Toast.LENGTH_LONG).show()
+            // 兜底：打开系统下载管理器，用户可手动点击安装
+            try {
+                activity.startActivity(Intent(DownloadManager.ACTION_VIEW_DOWNLOADS))
+            } catch (_: Exception) {
+            }
         }
     }
 }
