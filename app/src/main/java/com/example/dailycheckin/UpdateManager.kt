@@ -36,6 +36,7 @@ object UpdateManager {
 
     private const val PREF = "settings_pref"
     private const val KEY_LAST_CHECK = "last_update_check"
+    private const val KEY_DL_VER = "downloaded_update_ver"
     private val ui = Handler(Looper.getMainLooper())
 
     data class ReleaseInfo(val version: String, val apkUrl: String, val notes: String)
@@ -134,23 +135,25 @@ object UpdateManager {
             .setTitle(Lang.s("🎉 发现新版本 v${info.version}", "🎉 New version v${info.version}"))
             .setMessage(msg)
             .setPositiveButton(Lang.s("立即下载", "Download now")) { _, _ ->
-                download(activity, info.apkUrl)
+                download(activity, info.apkUrl, info.version)
             }
             .setNegativeButton(Lang.s("暂不", "Later"), null)
             .show()
     }
 
     /** 系统下载器下载 APK 到应用私有目录，完成后自动安装 */
-    private fun download(activity: Activity, url: String) {
+    private fun download(activity: Activity, url: String, version: String) {
         val fileName = "daily-tasks-update.apk"
         val dir = activity.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
         val old = File(dir, fileName)
-        // 已下载过的更新包直接安装，不重复下载
-        if (old.exists() && old.length() > 0) {
+        // 已下载过的更新包（版本号一致才复用，防止装回旧版）
+        val sp = activity.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+        if (old.exists() && old.length() > 0 && sp.getString(KEY_DL_VER, "") == version) {
             Toast.makeText(activity, Lang.s("更新包已下载，直接安装", "Update already downloaded, installing"), Toast.LENGTH_SHORT).show()
             installApk(activity, old)
             return
         }
+        if (old.exists()) old.delete()
 
         val req = DownloadManager.Request(Uri.parse(url))
             .setTitle(Lang.s("每日任务 更新包", "Daily Tasks update"))
@@ -205,6 +208,8 @@ object UpdateManager {
                         activity.unregisterReceiver(this)
                     } catch (_: Exception) {
                     }
+                    // 记录已下载更新包版本，下次可直接复用安装
+                    sp.edit().putString(KEY_DL_VER, version).apply()
                     if (dlg.isShowing) dlg.dismiss()
                     Toast.makeText(activity, Lang.s("下载完成，正在调起安装…", "Download complete, launching installer…"), Toast.LENGTH_SHORT).show()
                     installApk(activity, File(activity.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fileName))
@@ -255,7 +260,11 @@ object UpdateManager {
         ui.postDelayed(poll, 400)
     }
 
-    /** 安装 APK：PackageInstaller 会话提交（无需 FileProvider），触发系统安装界面 */
+    /**
+     * 安装 APK：
+     * 首选 ACTION_VIEW + content:// URI 调起系统安装器（各 ROM 兼容性最好）；
+     * 失败则退回 PackageInstaller 会话提交
+     */
     private fun installApk(activity: Activity, file: File) {
         if (!file.exists() || file.length() == 0L) {
             Toast.makeText(activity, Lang.s("下载文件不存在", "Downloaded file missing"), Toast.LENGTH_LONG).show()
@@ -273,6 +282,18 @@ object UpdateManager {
             )
             return
         }
+        // 方案一：系统标准安装流程（vivo/OPPO/小米等 ROM 均兼容）
+        try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(UpdateProvider.UPDATE_URI, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            activity.startActivity(intent)
+            return
+        } catch (_: Exception) {
+        }
+        // 方案二：PackageInstaller 会话提交兜底
         try {
             val installer = activity.packageManager.packageInstaller
             val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
@@ -282,7 +303,6 @@ object UpdateManager {
                 file.inputStream().use { input -> input.copyTo(out) }
                 session.fsync(out)
             }
-            // 提交会话 → 系统弹出安装确认界面
             val intent = Intent(activity, MainActivity::class.java)
             val pi = PendingIntent.getActivity(
                 activity, 0, intent,
@@ -292,7 +312,6 @@ object UpdateManager {
             session.close()
         } catch (e: Exception) {
             Toast.makeText(activity, Lang.s("安装调起失败，已打开系统下载页，可手动点击安装包", "Installer failed; opening Downloads, tap the APK manually"), Toast.LENGTH_LONG).show()
-            // 兜底：打开系统下载管理器，用户可手动点击安装
             try {
                 activity.startActivity(Intent(DownloadManager.ACTION_VIEW_DOWNLOADS))
             } catch (_: Exception) {

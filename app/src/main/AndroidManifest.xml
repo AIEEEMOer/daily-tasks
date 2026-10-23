@@ -50,6 +50,13 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <!-- 更新包文件共享（仅授权读取，用于调起系统安装器） -->
+        <provider
+            android:name=".UpdateProvider"
+            android:authorities="com.example.dailycheckin.updateprovider"
+            android:exported="false"
+            android:grantUriPermissions="true" />
     </application>
 
 </manifest>

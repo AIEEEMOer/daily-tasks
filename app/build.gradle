@@ -11,8 +11,8 @@ android {
         applicationId "com.example.dailycheckin"
         minSdk 26
         targetSdk 34
-        versionCode 25
-        versionName "1.22"
+        versionCode 26
+        versionName "1.23"
     }
 
     compileOptions {
