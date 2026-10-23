@@ -145,6 +145,8 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        // 更新安装完成回到 App 时，自动删除残留安装包
+        UpdateManager.cleanupIfUpdated(this)
         if (::habits.isInitialized) refresh()
     }
 

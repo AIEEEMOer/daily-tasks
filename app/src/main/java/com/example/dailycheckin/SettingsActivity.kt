@@ -88,6 +88,13 @@ class SettingsActivity : Activity() {
             marginTop = true
         ) { showFavDialog() })
 
+        content.addView(settingItem(
+            Lang.s("🧹 清理缓存", "🧹 Clear Cache"),
+            Lang.s("更新安装包占用：${UpdateManager.cacheSizeText(this)}",
+                "Update packages: ${UpdateManager.cacheSizeText(this)}"),
+            marginTop = true
+        ) { showClearCacheDialog() })
+
         // 检查更新固定为最后一项
         content.addView(settingItem(
             Lang.s("🔄 检查更新", "🔄 Check for Updates"),
@@ -181,6 +188,26 @@ class SettingsActivity : Activity() {
                     finish()
                 }
                 dlg.dismiss()
+            }
+            .setNegativeButton(Lang.cancel, null)
+            .show()
+    }
+
+    /** 清理缓存：删除残留的更新安装包（不影响打卡数据） */
+    private fun showClearCacheDialog() {
+        val size = UpdateManager.cacheSizeText(this)
+        AlertDialog.Builder(this)
+            .setTitle(Lang.s("清理缓存", "Clear Cache"))
+            .setMessage(
+                Lang.s("将删除已下载的更新安装包（当前占用：$size）。\n打卡数据、收藏和设置不受影响。",
+                    "This deletes downloaded update packages ($size).\nYour check-ins, favorites and settings are safe.")
+            )
+            .setPositiveButton(Lang.s("清理", "Clear")) { _, _ ->
+                UpdateManager.clearCache(this)
+                android.widget.Toast.makeText(
+                    this, Lang.s("缓存已清理", "Cache cleared"), android.widget.Toast.LENGTH_SHORT
+                ).show()
+                recreate() // 刷新占用显示
             }
             .setNegativeButton(Lang.cancel, null)
             .show()

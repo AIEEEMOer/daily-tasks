@@ -124,6 +124,43 @@ object UpdateManager {
         return false
     }
 
+    // —— 缓存管理（更新安装包是本 App 唯一占空间的缓存） ——
+
+    /** 更新包缓存大小（字节） */
+    fun cacheSize(context: Context): Long {
+        val f = UpdateProvider.updateFile(context)
+        return if (f.exists()) f.length() else 0L
+    }
+
+    /** 缓存大小格式化显示，如 "0.9 MB" */
+    fun cacheSizeText(context: Context): String {
+        val size = cacheSize(context)
+        return if (size <= 0) Lang.s("无缓存", "Empty")
+        else if (size < 1048576) "%.0f KB".format(size / 1024.0)
+        else "%.1f MB".format(size / 1048576.0)
+    }
+
+    /** 手动清理更新缓存，返回是否删掉了文件 */
+    fun clearCache(context: Context): Boolean {
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+            .edit().remove(KEY_DL_VER).apply()
+        val f = UpdateProvider.updateFile(context)
+        return f.exists() && f.delete()
+    }
+
+    /**
+     * 自动清理：若当前版本已不低于已下载的更新包版本，
+     * 说明更新已安装完成，删除残留安装包（在主页 onResume 调用）
+     */
+    fun cleanupIfUpdated(context: Context) {
+        val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+        val dlVer = sp.getString(KEY_DL_VER, "") ?: ""
+        if (dlVer.isNotEmpty() && !isNewer(dlVer, currentVersion(context))) {
+            UpdateProvider.updateFile(context).delete()
+            sp.edit().remove(KEY_DL_VER).apply()
+        }
+    }
+
     /** 发现新版本：弹窗提示下载 */
     private fun showUpdateDialog(activity: Activity, info: ReleaseInfo) {
         val msg = buildString {
