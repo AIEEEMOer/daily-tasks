@@ -162,16 +162,50 @@ object UpdateManager {
         val downloadId = dm.enqueue(req)
         Toast.makeText(activity, Lang.s("开始下载更新包…", "Download started…"), Toast.LENGTH_SHORT).show()
 
+        // —— 实时进度弹窗：进度条 + 百分比 + 已下载/总大小 ——
+        val dp = activity.resources.displayMetrics.density
+        val bar = android.widget.ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
+            max = 100
+            // 进度条染主题色
+            progressTintList = android.content.res.ColorStateList.valueOf(Theme.primary)
+        }
+        val tvPct = android.widget.TextView(activity).apply {
+            textSize = 13f
+            gravity = android.view.Gravity.CENTER
+            setTextColor(0xFF5A6B62.toInt())
+            setPadding(0, (10 * dp).toInt(), 0, 0)
+        }
+        val box = android.widget.LinearLayout(activity).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            val p = (24 * dp).toInt()
+            setPadding(p, (8 * dp).toInt(), p, 0)
+            addView(bar, android.widget.LinearLayout.LayoutParams(-1, -2))
+            addView(tvPct)
+        }
+        val dlg = AlertDialog.Builder(activity)
+            .setTitle(Lang.s("📥 正在下载更新", "📥 Downloading update"))
+            .setView(box)
+            .setNegativeButton(Lang.s("后台下载", "Background")) { d, _ -> d.dismiss() }
+            .create()
+        dlg.setCanceledOnTouchOutside(false)
+        dlg.show()
+        dlg.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(Theme.dark)
+
+        // 完成/失败只处理一次的标志（轮询与广播可能同时触发）
+        var finished = false
+
         // 监听下载完成 → 调起安装
         // 注意：该广播由系统下载管理器（另一个应用）发出，必须用 RECEIVER_EXPORTED，
         // 否则 Android 13+ 收不到回调，下载完成后不会自动调起安装
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
-                if (intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) == downloadId) {
+                if (intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) == downloadId && !finished) {
+                    finished = true
                     try {
                         activity.unregisterReceiver(this)
                     } catch (_: Exception) {
                     }
+                    if (dlg.isShowing) dlg.dismiss()
                     Toast.makeText(activity, Lang.s("下载完成，正在调起安装…", "Download complete, launching installer…"), Toast.LENGTH_SHORT).show()
                     installApk(activity, File(activity.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fileName))
                 }
@@ -184,6 +218,41 @@ object UpdateManager {
             @Suppress("UnspecifiedRegisterReceiverFlag")
             activity.registerReceiver(receiver, filter)
         }
+
+        // 轮询系统下载器进度（每 0.4 秒），刷新进度条
+        val poll = object : Runnable {
+            override fun run() {
+                if (finished) return
+                val cursor = dm.query(DownloadManager.Query().setFilterById(downloadId))
+                if (cursor != null && cursor.moveToFirst()) {
+                    val status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
+                    val soFar = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                    val total = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+                    if (total > 0) {
+                        val pct = (soFar * 100 / total).toInt()
+                        bar.progress = pct
+                        tvPct.text = Lang.s(
+                            "已下载 %.1f / %.1f MB（%d%%）",
+                            "%.1f / %.1f MB (%d%%)"
+                        ).format(soFar / 1048576.0, total / 1048576.0, pct)
+                    } else {
+                        tvPct.text = Lang.s("已下载 %.1f MB", "%.1f MB").format(soFar / 1048576.0)
+                    }
+                    if (status == DownloadManager.STATUS_FAILED && !finished) {
+                        finished = true
+                        try { activity.unregisterReceiver(receiver) } catch (_: Exception) {}
+                        if (dlg.isShowing) dlg.dismiss()
+                        Toast.makeText(activity, Lang.s("下载失败，请稍后重试", "Download failed, try again later"), Toast.LENGTH_LONG).show()
+                        cursor.close()
+                        return
+                    }
+                    cursor.close()
+                }
+                // 成功由上面的广播接收器处理
+                if (!finished) ui.postDelayed(this, 400)
+            }
+        }
+        ui.postDelayed(poll, 400)
     }
 
     /** 安装 APK：PackageInstaller 会话提交（无需 FileProvider），触发系统安装界面 */
