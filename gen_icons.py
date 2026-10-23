@@ -52,13 +52,18 @@ def make_icon(key, start, end):
     bbox = d.textbbox((0, 0), text, font=font)
     tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
     d.text(((SIZE - tw) / 2 - bbox[0], 38 - bbox[1]), text, font=font, fill=(255, 255, 255, 255))
-    # 弧形对勾（swoosh 风格）：贝塞尔曲线围成的流畅弯钩，尖尾 + 上扬尖梢
+    # 时钟指针对勾：时针短而粗（左下），分针长而细（右上），中间轴心圆点
     white = (255, 255, 255, 255)
-    top = qbez((138, 90), (106, 140), (85, 150))    # 上缘：右尖梢 → 谷底
-    bot = qbez((85, 150), (72, 136), (52, 114))     # 下缘：谷底 → 左尖尾
-    d.polygon(top + bot[::-1], fill=white)
-    # 谷底过渡圆润一点
-    d.ellipse([78, 138, 96, 156], fill=white)
+    cx, cy = 86, 138                      # 轴心（对号谷底位置）
+    hx, hy = 58, 118                      # 时针端点（短）
+    mx, my = 134, 88                      # 分针端点（长）
+    d.line([(cx, cy), (hx, hy)], fill=white, width=15)   # 时针：短粗
+    d.line([(cx, cy), (mx, my)], fill=white, width=7)    # 分针：长细
+    # 端点圆头
+    d.ellipse([hx - 7, hy - 7, hx + 7, hy + 7], fill=white)
+    d.ellipse([mx - 3, my - 3, mx + 3, my + 3], fill=white)
+    # 轴心圆点
+    d.ellipse([cx - 9, cy - 9, cx + 9, cy + 9], fill=white)
 
     img.save(os.path.join(OUT, f"icon_{key}.png"))
     print("saved", key)
