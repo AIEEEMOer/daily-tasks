@@ -201,8 +201,9 @@ class MainActivity : Activity() {
 
     override fun onDestroy() {
         quoteHandler.removeCallbacks(quoteRunnable)
-        // 退出 App 时再切换桌面图标，避免切换配色时图标立即跳变
-        Theme.applyIcon(this)
+        // 只在真正退出 App 时切换桌面图标（isFinishing 为 true）；
+        // recreate() 重建页面也会走 onDestroy，此时禁用启动别名会被系统杀掉任务，必须跳过
+        if (isFinishing) Theme.applyIcon(this)
         super.onDestroy()
     }
 
