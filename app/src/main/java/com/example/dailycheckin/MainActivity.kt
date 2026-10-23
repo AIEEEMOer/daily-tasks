@@ -144,6 +144,9 @@ class MainActivity : Activity() {
         UpdateManager.autoCheck(this)
 
         refresh()
+
+        // 新安装或升级到新版本后，首次打开先展示软件介绍（每个版本只弹一次）
+        Intro.showIfNewVersion(this)
     }
 
     override fun onResume() {
