@@ -105,12 +105,14 @@ class HabitAdapter(
             btnCheck.text = if (checked) "✓" else ""
             btnCheck.setOnClickListener { v ->
                 // 打卡弹跳动画：放大回弹后再触发状态切换
+                // 圆心同步左移一点，避免放大时贴近卡片右缘被裁
+                val dp = context.resources.displayMetrics.density
                 v.animate()
-                    .scaleX(1.3f).scaleY(1.3f)
+                    .scaleX(1.22f).scaleY(1.22f).translationX(-6 * dp)
                     .setDuration(130)
                     .setInterpolator(OvershootInterpolator())
                     .withEndAction {
-                        v.animate().scaleX(1f).scaleY(1f).setDuration(160).start()
+                        v.animate().scaleX(1f).scaleY(1f).translationX(0f).setDuration(160).start()
                         onToggle(habit)
                     }
                     .start()
