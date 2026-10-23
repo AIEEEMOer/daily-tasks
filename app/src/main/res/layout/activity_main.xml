@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_page"
+    android:orientation="vertical">
+
+    <!-- 顶部头部：渐变绿 + 漂浮装饰圆 -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_header">
+
+        <!-- 装饰圆 1：右上角 -->
+        <View
+            android:id="@+id/deco1"
+            android:layout_width="130dp"
+            android:layout_height="130dp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="-35dp"
+            android:layout_marginEnd="-35dp"
+            android:background="@drawable/bg_deco_circle" />
+
+        <!-- 装饰圆 2：中部偏左 -->
+        <View
+            android:id="@+id/deco2"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_gravity="bottom|start"
+            android:layout_marginStart="150dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/bg_deco_circle" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="24dp"
+            android:paddingTop="52dp"
+            android:paddingEnd="24dp"
+            android:paddingBottom="24dp">
+
+            <!-- 左：日期+标题+进度文字；右：今日进度圆环 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvDate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#D9F5E8"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/tvAppTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:textColor="#FFFFFF"
+                        android:textSize="26sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvProgress"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textColor="#EAFBF3"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <com.example.dailycheckin.RingProgressView
+                    android:id="@+id/ringProgress"
+                    android:layout_width="84dp"
+                    android:layout_height="84dp"
+                    android:layout_marginStart="16dp" />
+            </LinearLayout>
+
+            <!-- 名言：半透明白色圆角卡片，固定两行高度避免跳动 -->
+            <TextView
+                android:id="@+id/tvQuote"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_quote_card"
+                android:ellipsize="end"
+                android:gravity="center_vertical"
+                android:lines="2"
+                android:paddingStart="14dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="14dp"
+                android:paddingBottom="10dp"
+                android:textColor="#F2FFF9"
+                android:textSize="13sp" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- 打卡列表 -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ListView
+            android:id="@+id/listView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="0dp"
+            android:paddingStart="16dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="88dp" />
+
+        <!-- 空状态：萌芽图标 + 提示文字 -->
+        <LinearLayout
+            android:id="@+id/emptyBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tvEmptyIcon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🌱"
+                android:textSize="52sp" />
+
+            <TextView
+                android:id="@+id/tvEmpty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:textAlignment="center"
+                android:textColor="@color/text_hint"
+                android:textSize="15sp" />
+        </LinearLayout>
+
+        <!-- 统计按钮：绿底圆形 + 日历图标，与右下角 + 对称 -->
+        <TextView
+            android:id="@+id/tvStats"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="bottom|start"
+            android:layout_margin="24dp"
+            android:background="@drawable/bg_fab"
+            android:foreground="@drawable/ic_calendar"
+            android:foregroundGravity="center" />
+
+        <!-- 设置按钮：白底绿描边圆形 + 齿轮图标，位于底部正中 -->
+        <TextView
+            android:id="@+id/tvSettings"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_margin="24dp"
+            android:background="@drawable/bg_fab"
+            android:foreground="@drawable/ic_settings"
+            android:foregroundGravity="center" />
+
+        <!-- 新建按钮：绿色圆形 +（关闭字体边距使符号居中） -->
+        <TextView
+            android:id="@+id/fabAdd"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="24dp"
+            android:background="@drawable/bg_fab"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:text="+"
+            android:textColor="#FFFFFF"
+            android:textSize="28sp"
+            android:translationY="1dp" />
+    </FrameLayout>
+
+</LinearLayout>

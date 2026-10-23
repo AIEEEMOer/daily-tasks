@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 统计按钮：白色圆形 + 绿色描边 + 按压涟漪（与绿色 + 按钮对称） -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#331FA371">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#FFFFFF" />
+            <stroke android:width="1.5dp" android:color="#1FA371" />
+        </shape>
+    </item>
+</ripple>

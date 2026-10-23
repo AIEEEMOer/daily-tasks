@@ -1,0 +1,29 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.example.dailycheckin'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.example.dailycheckin"
+        minSdk 26
+        targetSdk 34
+        versionCode 20
+        versionName "1.17"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+}
+
+// 零第三方依赖：全部使用安卓框架原生控件，构建最稳
+dependencies {
+}

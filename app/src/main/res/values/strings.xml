@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">每日任务</string>
+    <string-array name="habit_types">
+        <item>每日目标</item>
+        <item>每周目标</item>
+        <item>每月目标</item>
+        <item>单次目标</item>
+    </string-array>
+    <!-- 三个篮子：狮子（每日必做）/ 牛马（事务性）/ 鸵鸟（可拖延） -->
+    <string-array name="habit_baskets">
+        <item>🦁 狮子任务</item>
+        <item>🐂 牛马任务</item>
+        <item>🐦 鸵鸟任务</item>
+    </string-array>
+</resources>
