@@ -50,6 +50,9 @@ data class Habit(
     var target: Int = 1,
     var startDate: String = today(),
     var basket: Basket = Basket.LION,
+    /** 打卡时段（分钟数 0~1439）：windowStart=windowEnd=-1 表示全天不限；支持跨零点时段 */
+    var windowStart: Int = -1,
+    var windowEnd: Int = -1,
     val checkIns: MutableSet<String> = mutableSetOf(),
     /** 心得记录：打卡日期 -> 心得内容 */
     val notes: MutableMap<String, String> = mutableMapOf()
@@ -59,6 +62,23 @@ data class Habit(
 
     /** 今天是否还未到开始日期（提前设置的未来目标） */
     fun isNotStarted(): Boolean = LocalDate.now().isBefore(LocalDate.parse(startDate))
+
+    /** 是否设置了打卡时段限制 */
+    fun hasWindow(): Boolean = windowStart >= 0 && windowEnd >= 0
+
+    /** 时段显示文字："全天" 或 "08:00-22:00" */
+    fun windowText(): String =
+        if (!hasWindow()) Lang.s("全天", "All day")
+        else String.format("%02d:%02d-%02d:%02d", windowStart / 60, windowStart % 60, windowEnd / 60, windowEnd % 60)
+
+    /** 当前时间是否在可打卡时段内（未设置则任何时间可打卡；支持跨零点，如 22:00-06:00） */
+    fun isInWindowNow(): Boolean {
+        if (!hasWindow()) return true
+        val now = java.time.LocalTime.now()
+        val cur = now.hour * 60 + now.minute
+        return if (windowStart <= windowEnd) cur in windowStart..windowEnd
+        else cur >= windowStart || cur <= windowEnd
+    }
 
     /** 在某日期打卡/取消打卡，返回操作后是否已打卡 */
     fun toggleToday(): Boolean {
@@ -208,6 +228,9 @@ object HabitStorage {
                     target = o.optInt("target", 1).coerceAtLeast(1),
                     startDate = o.optString("startDate", Habit.today()),
                     basket = basket,
+                    // 打卡时段（旧版本数据无此字段，默认全天不限）
+                    windowStart = o.optInt("windowStart", -1),
+                    windowEnd = o.optInt("windowEnd", -1),
                     checkIns = dates,
                     notes = noteMap
                 )
@@ -226,6 +249,8 @@ object HabitStorage {
             o.put("target", h.target)
             o.put("startDate", h.startDate)
             o.put("basket", h.basket.name)
+            o.put("windowStart", h.windowStart)
+            o.put("windowEnd", h.windowEnd)
             o.put("checkIns", JSONArray(h.checkIns.toList()))
             val no = JSONObject()
             h.notes.forEach { (d, t) -> no.put(d, t) }

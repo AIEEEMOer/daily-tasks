@@ -115,11 +115,23 @@ class MainActivity : Activity() {
 
         adapter = HabitAdapter(this, displayItems,
             onToggle = { habit ->
-                val checked = habit.toggleToday()
-                HabitStorage.save(this, habits)
-                refresh()
-                // 打卡成功后弹出心得记录（可跳过）
-                if (checked) showNoteDialog(habit)
+                // 时段限制：不在任务时段内无法完成打卡（取消已打的卡不受限）
+                if (!habit.isCheckedToday() && !habit.isInWindowNow()) {
+                    Toast.makeText(
+                        this,
+                        Lang.s(
+                            "不在任务时段内（${habit.windowText()}），暂时无法打卡",
+                            "Outside the time window (${habit.windowText()}), check-in is disabled"
+                        ),
+                        Toast.LENGTH_LONG
+                    ).show()
+                } else {
+                    val checked = habit.toggleToday()
+                    HabitStorage.save(this, habits)
+                    refresh()
+                    // 打卡成功后弹出心得记录（可跳过）
+                    if (checked) showNoteDialog(habit)
+                }
             },
             onLongClick = { habit -> showOptionsDialog(habit) }
         )
@@ -263,6 +275,10 @@ class MainActivity : Activity() {
         val etTarget: EditText = view.findViewById(R.id.etTarget)
         val targetRow: View = view.findViewById(R.id.targetRow)
         val tvStartDate: TextView = view.findViewById(R.id.tvStartDate)
+        val cbWindow: android.widget.CheckBox = view.findViewById(R.id.cbWindow)
+        val windowRow: View = view.findViewById(R.id.windowRow)
+        val tvWinStart: TextView = view.findViewById(R.id.tvWinStart)
+        val tvWinEnd: TextView = view.findViewById(R.id.tvWinEnd)
 
         // 应用配色主题：标题竖条 + 输入框聚焦描边
         view.findViewById<View>(R.id.tvTitleBar).background = Theme.titleBarBg(this)
@@ -271,6 +287,9 @@ class MainActivity : Activity() {
         spBasket.background = Theme.inputBg(this)
         etTarget.background = Theme.inputBg(this)
         tvStartDate.background = Theme.inputBg(this)
+        tvWinStart.background = Theme.inputBg(this)
+        tvWinEnd.background = Theme.inputBg(this)
+        cbWindow.buttonTintList = android.content.res.ColorStateList.valueOf(Theme.primary)
 
         // 双语文案与下拉选项（对话框标题已内嵌在布局中）
         view.findViewById<TextView>(R.id.tvDlgTitle).text = Lang.s("✨ 新建任务目标", "✨ New Goal")
@@ -282,6 +301,9 @@ class MainActivity : Activity() {
         view.findViewById<TextView>(R.id.tvLblBasket).text = Lang.s("🧺 任务篮子", "🧺 Basket")
         view.findViewById<TextView>(R.id.tvLblTarget).text = Lang.s("🔢 目标次数", "🔢 Times")
         view.findViewById<TextView>(R.id.tvLblStart).text = Lang.s("📅 开始日期", "📅 Start date")
+        view.findViewById<TextView>(R.id.tvLblWindow).text = Lang.s("⏰ 任务时段", "⏰ Time window")
+        cbWindow.text = Lang.s("仅在指定时段内允许打卡（默认全天）", "Only allow check-in within a time window (default: all day)")
+        view.findViewById<TextView>(R.id.tvWinTo).text = Lang.s("至", "to")
         spType.adapter = spinnerAdapter(Lang.typeOptions)
         spBasket.adapter = spinnerAdapter(Lang.basketOptions)
 
@@ -309,6 +331,30 @@ class MainActivity : Activity() {
             ).show()
         }
 
+        // 任务时段：默认不勾选=全天；勾选后展示起止时间选择（24 小时制）
+        var winStart = 8 * 60   // 默认 08:00
+        var winEnd = 22 * 60    // 默认 22:00
+        fun fmtMin(min: Int) = String.format("%02d:%02d", min / 60, min % 60)
+        tvWinStart.text = fmtMin(winStart)
+        tvWinEnd.text = fmtMin(winEnd)
+        cbWindow.setOnCheckedChangeListener { _, checked ->
+            windowRow.visibility = if (checked) View.VISIBLE else View.GONE
+        }
+        tvWinStart.setOnClickListener {
+            android.app.TimePickerDialog(
+                this,
+                { _, h, m -> winStart = h * 60 + m; tvWinStart.text = fmtMin(winStart) },
+                winStart / 60, winStart % 60, true
+            ).show()
+        }
+        tvWinEnd.setOnClickListener {
+            android.app.TimePickerDialog(
+                this,
+                { _, h, m -> winEnd = h * 60 + m; tvWinEnd.text = fmtMin(winEnd) },
+                winEnd / 60, winEnd % 60, true
+            ).show()
+        }
+
         AlertDialog.Builder(this)
             .setView(view)
             .setPositiveButton(Lang.s("创建", "Create")) { _, _ ->
@@ -326,6 +372,15 @@ class MainActivity : Activity() {
                 // 单次打卡固定 1 次；开始日期即待办日期
                 val target = if (type == HabitType.ONCE) 1
                 else etTarget.text.toString().toIntOrNull()?.coerceAtLeast(1) ?: 1
+                // 任务时段：起止时间不能相同（相同等同于全天无意义，提示用户修改）
+                if (cbWindow.isChecked && winStart == winEnd) {
+                    Toast.makeText(
+                        this,
+                        Lang.s("开始与结束时间不能相同", "Start and end time must differ"),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@setPositiveButton
+                }
                 habits.add(
                     Habit(
                         id = System.currentTimeMillis(),
@@ -333,7 +388,9 @@ class MainActivity : Activity() {
                         type = type,
                         target = target,
                         startDate = startDate.format(Habit.FMT),
-                        basket = Basket.values()[spBasket.selectedItemPosition]
+                        basket = Basket.values()[spBasket.selectedItemPosition],
+                        windowStart = if (cbWindow.isChecked) winStart else -1,
+                        windowEnd = if (cbWindow.isChecked) winEnd else -1
                     )
                 )
                 HabitStorage.save(this, habits)
@@ -382,6 +439,7 @@ class MainActivity : Activity() {
         }
         sb.append(Lang.s("\n任务篮子：", "\nBasket: ") + habit.basket.title())
         sb.append(Lang.s("\n开始日期：", "\nStart: ") + habit.startDate)
+        sb.append(Lang.s("\n任务时段：", "\nTime window: ") + habit.windowText())
         sb.append(Lang.s("\n累计打卡：${habit.totalCount()} 次", "\nTotal check-ins: ${habit.totalCount()}"))
         when (habit.type) {
             HabitType.DAILY -> sb.append(Lang.s(" · 连续 ${habit.currentStreak()} 天", " · ${habit.currentStreak()}-day streak"))
