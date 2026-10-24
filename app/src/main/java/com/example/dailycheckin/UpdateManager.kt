@@ -26,13 +26,13 @@ import java.net.URL
  * 1. 打开 App 每天自动静默检查一次；设置页可手动检查
  * 2. 有新版本 → 弹窗 → 系统下载器下载 APK → 下完自动调起安装
  *
- * 服务端：GitHub Releases（仓库每次发版上传 APK，tag 命名 v1.16 之类）
- * 若国内访问慢，可把 REPO 换到 Gitee（API 结构相同）。
+ * 服务端：Gitee Releases（仓库每次发版上传 APK，tag 命名 v1.33 之类）
+ * 国内访问稳定；附件直链按固定规则拼接，不依赖 assets 字段。
  */
 object UpdateManager {
 
-    // TODO: 创建好 GitHub 仓库后，把这里改成 "你的用户名/仓库名"，例如 "zhangsan/daily-tasks"
-    private const val REPO = "AIEEEMOer/daily-tasks"
+    // Gitee 仓库："用户名/仓库名"
+    private const val REPO = "AIEMO/daily-tasks"
 
     private const val PREF = "settings_pref"
     private const val KEY_LAST_CHECK = "last_update_check"
@@ -81,14 +81,13 @@ object UpdateManager {
         }.start()
     }
 
-    /** 拉取 GitHub 最新 Release 信息（在子线程调用） */
+    /** 拉取 Gitee 最新 Release 信息（在子线程调用） */
     private fun fetchLatest(): ReleaseInfo? {
         return try {
-            val api = "https://api.github.com/repos/$REPO/releases/latest"
+            val api = "https://gitee.com/api/v5/repos/$REPO/releases/latest"
             val conn = URL(api).openConnection() as HttpURLConnection
             conn.connectTimeout = 8000
             conn.readTimeout = 8000
-            conn.setRequestProperty("Accept", "application/vnd.github+json")
             conn.setRequestProperty("User-Agent", "DailyTasks-App")
             if (conn.responseCode != 200) return null
             val body = conn.inputStream.bufferedReader().readText()
@@ -97,16 +96,10 @@ object UpdateManager {
             val o = JSONObject(body)
             val version = o.optString("tag_name").removePrefix("v")
             val notes = o.optString("body")
-            val assets = o.optJSONArray("assets") ?: return null
-            var apkUrl = ""
-            for (i in 0 until assets.length()) {
-                val a = assets.getJSONObject(i)
-                if (a.optString("name").endsWith(".apk")) {
-                    apkUrl = a.optString("browser_download_url")
-                    break
-                }
-            }
-            if (apkUrl.isEmpty()) null else ReleaseInfo(version, apkUrl, notes)
+            if (version.isEmpty()) return null
+            // Gitee 附件直链按固定规则拼接（发版文件名统一为 daily-tasks-v{版本}.apk）
+            val apkUrl = "https://gitee.com/$REPO/releases/download/v$version/daily-tasks-v$version.apk"
+            ReleaseInfo(version, apkUrl, notes)
         } catch (e: Exception) {
             null
         }
