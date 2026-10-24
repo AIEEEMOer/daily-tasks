@@ -52,6 +52,13 @@ class MainActivity : Activity() {
             quoteHandler.postDelayed(this, 10000)
         }
     }
+    /** 每分钟刷新一次：跨打卡时段边界自动置灰/恢复，未来目标到开始日期自动出现 */
+    private val timeTickRunnable = object : Runnable {
+        override fun run() {
+            if (::habits.isInitialized) refresh()
+            quoteHandler.postDelayed(this, 60000)
+        }
+    }
 
     companion object {
         // 名言库见 Quotes.kt（420+ 条：古诗词 + 名人名言 + 歌词 + 影视台词 + 励志流行语）
@@ -115,17 +122,9 @@ class MainActivity : Activity() {
 
         adapter = HabitAdapter(this, displayItems,
             onToggle = { habit ->
-                // 时段限制：不在任务时段内无法完成打卡（取消已打的卡不受限）
-                if (!habit.isCheckedToday() && !habit.isInWindowNow()) {
-                    Toast.makeText(
-                        this,
-                        Lang.s(
-                            "不在任务时段内（${habit.windowText()}），暂时无法打卡",
-                            "Outside the time window (${habit.windowText()}), check-in is disabled"
-                        ),
-                        Toast.LENGTH_LONG
-                    ).show()
-                } else {
+                // 打卡按钮在时段外已置灰禁用；这里再静默校验一次，不弹提示
+                // 已打卡的记录即使过了时段也允许取消
+                if (habit.isCheckedToday() || habit.isInWindowNow()) {
                     val checked = habit.toggleToday()
                     HabitStorage.save(this, habits)
                     refresh()
@@ -172,6 +171,13 @@ class MainActivity : Activity() {
         // 更新安装完成回到 App 时，自动删除残留安装包
         UpdateManager.cleanupIfUpdated(this)
         if (::habits.isInitialized) refresh()
+        quoteHandler.removeCallbacks(timeTickRunnable)
+        quoteHandler.postDelayed(timeTickRunnable, 60000)
+    }
+
+    override fun onPause() {
+        quoteHandler.removeCallbacks(timeTickRunnable)
+        super.onPause()
     }
 
     /** 请求通知权限（Android 13+ 需运行时授权，否则提醒无法弹窗） */
@@ -195,16 +201,23 @@ class MainActivity : Activity() {
         tvProgress.text = if (habits.isEmpty())
             Lang.s("点击下方 + 创建第一个任务目标", "Tap + below to create your first goal")
         else Lang.s("今日已打卡 $done / ${active.size}", "Today: $done / ${active.size} done")
-        tvEmpty.text = Lang.s("种下第一个小目标吧\n点击右下角 + 开始", "Plant your first goal\nTap + to start")
+        tvEmpty.text = if (habits.isEmpty())
+            Lang.s("种下第一个小目标吧\n点击右下角 + 开始", "Plant your first goal\nTap + to start")
+        else Lang.s(
+            "今天暂无打卡任务\n未来目标会在开始日期自动出现",
+            "No goals for today\nScheduled goals will appear on their start date"
+        )
         // 右上角圆环同步今日完成度
         ringProgress.setProgress(done, active.size)
 
-        emptyBox.visibility = if (habits.isEmpty()) View.VISIBLE else View.GONE
+        // 空状态按"今天的任务"判断：只有未来任务时也显示说明，不留空白页
+        emptyBox.visibility = if (active.isEmpty()) View.VISIBLE else View.GONE
 
         // 按三个篮子分组排布：狮子 → 牛马 → 鸵鸟，各组带标题
+        // 仅显示今天已到开始日期的任务，未来目标不占当天列表
         displayItems.clear()
         for (b in Basket.values()) {
-            val group = habits.filter { it.basket == b }
+            val group = active.filter { it.basket == b }
             if (group.isNotEmpty()) {
                 displayItems.add(b.title())
                 displayItems.addAll(group)
@@ -215,6 +228,7 @@ class MainActivity : Activity() {
 
     override fun onDestroy() {
         quoteHandler.removeCallbacks(quoteRunnable)
+        quoteHandler.removeCallbacks(timeTickRunnable)
         super.onDestroy()
     }
 

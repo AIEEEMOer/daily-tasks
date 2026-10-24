@@ -100,22 +100,31 @@ class HabitAdapter(
             tvTotal.text = Lang.s("共 ${habit.totalCount()} 次", "${habit.totalCount()} check-ins")
 
             val checked = habit.isCheckedToday()
-            btnCheck.background =
-                if (checked) Theme.fabBg(context) else Theme.circleUnchecked(context)
-            btnCheck.text = if (checked) "✓" else ""
-            btnCheck.setOnClickListener { v ->
-                // 打卡弹跳动画：放大回弹后再触发状态切换
-                // 圆心同步左移一点，避免放大时贴近卡片右缘被裁
-                val dp = context.resources.displayMetrics.density
-                v.animate()
-                    .scaleX(1.22f).scaleY(1.22f).translationX(-6 * dp)
-                    .setDuration(130)
-                    .setInterpolator(OvershootInterpolator())
-                    .withEndAction {
-                        v.animate().scaleX(1f).scaleY(1f).translationX(0f).setDuration(160).start()
-                        onToggle(habit)
-                    }
-                    .start()
+            // 时段外且尚未打卡：圆圈置灰并禁用点击；已打卡仍允许取消
+            val windowLocked = !checked && !habit.isInWindowNow()
+            if (windowLocked) {
+                btnCheck.setBackgroundResource(R.drawable.bg_circle_disabled)
+                btnCheck.text = ""
+                btnCheck.setOnClickListener(null)
+                btnCheck.isClickable = false
+            } else {
+                btnCheck.background =
+                    if (checked) Theme.fabBg(context) else Theme.circleUnchecked(context)
+                btnCheck.text = if (checked) "✓" else ""
+                btnCheck.setOnClickListener { v ->
+                    // 打卡弹跳动画：放大回弹后再触发状态切换
+                    // 圆心同步左移一点，避免放大时贴近卡片右缘被裁
+                    val dp = context.resources.displayMetrics.density
+                    v.animate()
+                        .scaleX(1.22f).scaleY(1.22f).translationX(-6 * dp)
+                        .setDuration(130)
+                        .setInterpolator(OvershootInterpolator())
+                        .withEndAction {
+                            v.animate().scaleX(1f).scaleY(1f).translationX(0f).setDuration(160).start()
+                            onToggle(habit)
+                        }
+                        .start()
+                }
             }
         }
 

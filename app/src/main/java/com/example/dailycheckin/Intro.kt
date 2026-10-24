@@ -53,8 +53,8 @@ object Intro {
 「每日任务」是一款结合「三个篮子」任务管理法的打卡应用：每天打卡、记录心得、统计回顾，帮你把时间花在真正重要的事情上。
 
 【快速上手】
-1. 点右下角「+」新建任务目标：填写名称、选择目标类型、选择任务篮子、设定开始日期（可提前设置未来目标）；可选「任务时段」，设置后只能在指定时段内打卡，不设置则全天可打卡。
-2. 点卡片右侧圆圈完成打卡；打卡成功后可记录当天心得。
+1. 点右下角「+」新建任务目标：填写名称、选择目标类型、选择任务篮子、设定开始日期（可提前设置未来目标）；可选「任务时段」，设置后只能在指定时段内打卡，时段外打卡按钮会置灰，不设置则全天可打卡。
+2. 点卡片右侧圆圈完成打卡；打卡成功后可记录当天心得。未到开始日期的未来目标不会出现在当天列表，会在开始日期自动显示。
 3. 长按卡片可查看详情（含月历热力图、全部打卡记录与心得）或删除目标。
 4. 点左下角日历按钮进入统计页：总览、完成率、每日记录一目了然。
 5. 每晚 20:00 若仍有未完成目标，系统会弹通知提醒你。
@@ -97,8 +97,8 @@ object Intro {
 Daily Tasks is a check-in app built on the "Three Baskets" task management method: check in daily, keep notes, review statistics — spend your time on what truly matters.
 
 [Quick start]
-1. Tap "+" (bottom right) to create a goal: name, type, basket, and start date (future dates allowed). Optional "time window": once set, check-in is only allowed within that window; otherwise any time works.
-2. Tap the circle on a card to check in; you can add a note after each check-in.
+1. Tap "+" (bottom right) to create a goal: name, type, basket, and start date (future dates allowed). Optional "time window": once set, check-in is only allowed within that window and the button turns gray outside it; otherwise any time works.
+2. Tap the circle on a card to check in; you can add a note after each check-in. Future goals are hidden from today's list and appear automatically on their start date.
 3. Long-press a card for details (calendar heatmap, history & notes) or to delete.
 4. Tap the calendar button (bottom left) for statistics: overview, completion rate, daily history.
 5. At 8:00 PM, you'll get a notification if any goals remain unfinished.
